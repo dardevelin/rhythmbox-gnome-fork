@@ -54,6 +54,8 @@ static gboolean do_pause = FALSE;
 static gboolean play_pause = FALSE;
 static gboolean stop = FALSE;
 
+static gboolean toggle_shuffle = FALSE;
+
 static gboolean enqueue = FALSE;
 
 static gboolean clear_queue = FALSE;
@@ -92,6 +94,8 @@ static GOptionEntry args[] = {
 	{ "pause", 0, 0, G_OPTION_ARG_NONE, &do_pause, N_("Pause playback if currently playing"), NULL },
 	{ "play-pause", 0, 0, G_OPTION_ARG_NONE, &play_pause, N_("Toggle play/pause mode"), NULL },
 /*	{ "stop", 0, 0, G_OPTION_ARG_NONE, &stop, N_("Stop playback"), NULL }, */
+
+	{ "toggle-shuffle", 0, 0, G_OPTION_ARG_NONE, &toggle_shuffle, N_("Toggle on/off shuffle mode"), NULL },
 
 	{ "play-uri", 0, 0, G_OPTION_ARG_FILENAME, &play_uri, N_("Play a specified URI, importing it if necessary"), N_("URI to play")},
 	{ "enqueue", 0, 0, G_OPTION_ARG_NONE, &enqueue, N_("Add specified tracks to the play queue"), NULL },
@@ -728,7 +732,7 @@ main (int argc, char **argv)
 	if (next || previous || (seek != 0) ||
 	    clear_queue ||
 	    play_uri || other_stuff ||
-	    play || do_pause || play_pause || stop ||
+	    play || do_pause || play_pause || stop || toggle_shuffle ||
 	    print_playing || print_playing_format ||
 	    (set_volume > -0.01) || volume_up || volume_down || print_volume /*|| mute || unmute*/ || (set_rating > -0.01))
 		no_present = TRUE;
@@ -743,6 +747,13 @@ main (int argc, char **argv)
 		rb_debug ("rate song");
 
 		rate_song (mpris, set_rating);
+	}
+	
+	/* shuffle mode needs to be determined before switching track */
+	if (toggle_shuffle) {
+		rb_debug ("toggle shuffle");
+		g_action_group_activate_action (G_ACTION_GROUP (app), "ToggleShuffle", NULL);
+		annoy(&error);
 	}
 
 	/* skip to next or previous track */
